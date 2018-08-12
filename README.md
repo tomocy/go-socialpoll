@@ -1,1 +1,1 @@
-# go-twittervotes
+# go-socialpoll
