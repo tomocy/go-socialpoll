@@ -24,7 +24,7 @@ func dial(network, addr string) (net.Conn, error) {
 		conn = nil
 	}
 
-	newConn, err := net.DialTimeout(network, addr, 5*time.Second)
+	newConn, err := net.DialTimeout(network, addr, 30*time.Second)
 	if err != nil {
 		return nil, err
 	}
@@ -51,8 +51,8 @@ var (
 
 func setUpTwitterAuth() {
 	var twitterCreds struct {
-		ClientKey    string `env: "SP_TWITTER_CLIENT_KEY, required"`
-		ClientSecret string `env: "SP_TWITTER_CLIENT_SECRET, required"`
+		ClientKey    string `env:"SP_TWITTER_CLIENT_KEY,required"`
+		ClientSecret string `env:"SP_TWITTER_CLIENT_SECRET,required"`
 	}
 	if err := envdecode.Decode(&twitterCreds); err != nil {
 		log.Fatalf("could not decode twitter credentials from env: %s\n", err)
