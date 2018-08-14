@@ -135,26 +135,30 @@ func readFromTwitter(votes chan<- string, twitterVoteDB twitterVoteDB) {
 	}
 }
 
-func startTwitterStream(stop <-chan struct{}, votes chan<- string, twitterVoteDB twitterVoteDB) <-chan struct{} {
-	stopped := make(chan struct{})
-	go func() {
-		defer func() {
-			stopped <- struct{}{}
-		}()
+type twitterStream struct {
+	db        twitterVoteDB
+	stoppedCh chan struct{}
+}
 
-		for {
-			select {
-			case <-stop:
-				log.Println("stopping connecting to Twitter")
-				return
-			default:
-				log.Println("start connecting to Twitter")
-				readFromTwitter(votes, twitterVoteDB)
-				log.Println("waiting")
-				time.Sleep(10 * time.Second)
-			}
+func initTwitterStream(db twitterVoteDB) twitterStream {
+	return twitterStream{
+		db:        db,
+		stoppedCh: make(chan struct{}),
+	}
+}
+
+func (s twitterStream) start(stopCh <-chan struct{}, votesCh chan<- string) {
+	for {
+		select {
+		case <-stopCh:
+			log.Println("twitterStream stopped streaming")
+			s.stoppedCh <- struct{}{}
+			return
+		default:
+			log.Println("twitterStream started connecting to Twitter")
+			readFromTwitter(votesCh, s.db)
+			log.Println("twitterStream is waiting for 10s for next request")
+			time.Sleep(10 * time.Second)
 		}
-	}()
-
-	return stopped
+	}
 }

@@ -19,9 +19,11 @@ func main() {
 	votes := make(chan string)
 	twitterVoteNSQ := initTwitterVoteNSQ("localhost:4150")
 	go twitterVoteNSQ.publishVotes(votes)
-	twitterStreamStoppedCh := startTwitterStream(twitterStreamStopCh, votes, twitterVoteDB)
 
-	<-twitterStreamStoppedCh
+	twitterStream := initTwitterStream(twitterVoteDB)
+	go twitterStream.start(twitterStreamStopCh, votes)
+
+	<-twitterStream.stoppedCh
 	close(votes)
 	<-twitterVoteNSQ.stoppedCh
 }
