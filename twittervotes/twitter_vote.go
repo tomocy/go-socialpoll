@@ -11,16 +11,18 @@ import (
 
 type twitterVote struct {
 	termSignalCh        chan os.Signal
+	stream              *twitterStream
 	twitterStreamStopCh chan struct{}
 	isStopLocker        sync.Mutex
 	isStopped           bool
 }
 
-func newTwitterVote(twitterStreamStopCh chan struct{}) *twitterVote {
+func newTwitterVote(db twitterVoteDB, twitterStreamStopCh chan struct{}) *twitterVote {
 	termSignalCh := make(chan os.Signal)
 	signal.Notify(termSignalCh, syscall.SIGINT)
 	return &twitterVote{
 		termSignalCh:        termSignalCh,
+		stream:              newTwitterStream(db),
 		twitterStreamStopCh: twitterStreamStopCh,
 	}
 }
@@ -31,7 +33,7 @@ func (v *twitterVote) waitInterruptSignalToFinishTwitterStream() {
 	log.Println("twitter vote is stopping and finishing twitter stream")
 	v.stop()
 	v.sendStopSignalToTwitterStream()
-	closeConn()
+	v.stream.close()
 }
 
 func (v *twitterVote) stop() {
@@ -51,7 +53,7 @@ func (v *twitterVote) closeConnectionToTwitterStreamPerSecond() {
 	for {
 		select {
 		case <-ticker.C:
-			closeConn()
+			v.stream.close()
 		}
 
 		if v.doesStop() {

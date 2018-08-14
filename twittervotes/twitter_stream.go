@@ -133,7 +133,7 @@ func (s *twitterStream) dial(network, addr string) (net.Conn, error) {
 	return newConn, nil
 }
 
-func (s twitterStream) close() {
+func (s *twitterStream) close() {
 	if s.conn != nil {
 		s.conn.Close()
 	}
