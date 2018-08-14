@@ -93,8 +93,8 @@ type tweet struct {
 	Text string
 }
 
-func readFromTwitter(votes chan<- string) {
-	options, err := loadOptions()
+func readFromTwitter(votes chan<- string, twitterVoteDB twitterVoteDB) {
+	options, err := twitterVoteDB.loadOptions()
 	if err != nil {
 		log.Printf("could not load options: %s\n", err)
 		return
@@ -135,7 +135,7 @@ func readFromTwitter(votes chan<- string) {
 	}
 }
 
-func startTwitterStream(stop <-chan struct{}, votes chan<- string) <-chan struct{} {
+func startTwitterStream(stop <-chan struct{}, votes chan<- string, twitterVoteDB twitterVoteDB) <-chan struct{} {
 	stopped := make(chan struct{})
 	go func() {
 		defer func() {
@@ -149,7 +149,7 @@ func startTwitterStream(stop <-chan struct{}, votes chan<- string) <-chan struct
 				return
 			default:
 				log.Println("start connecting to Twitter")
-				readFromTwitter(votes)
+				readFromTwitter(votes, twitterVoteDB)
 				log.Println("waiting")
 				time.Sleep(10 * time.Second)
 			}
