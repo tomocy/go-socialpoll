@@ -11,9 +11,11 @@ import (
 
 type twitterVote struct {
 	termSignalCh        chan os.Signal
+	stoppedCh           chan struct{}
 	stream              *twitterStream
 	twitterStreamStopCh chan struct{}
 	nsq                 *twitterVoteNSQ
+	votesCh             chan string
 	isStoppedLocker     sync.Mutex
 	isStopped           bool
 }
@@ -27,7 +29,22 @@ func newTwitterVote(twitterStreamStopCh chan struct{}, dbURL string, nsqURL stri
 		stream:              newTwitterStream(db),
 		twitterStreamStopCh: twitterStreamStopCh,
 		nsq:                 newTwitterVoteNSQ(nsqURL),
+		votesCh:             make(chan string),
 	}
+}
+
+func (v *twitterVote) start() {
+	log.Println("twitterVote started")
+	go v.waitInterruptSignalToFinishTwitterStream()
+	go v.closeConnectionToTwitterStreamPerSecond()
+
+	v.dialDB()
+	defer v.closeDB()
+
+	go v.publishVotes()
+	go v.startStream()
+
+	v.waitForStreamAndNSQToBeClosed()
 }
 
 func (v *twitterVote) waitInterruptSignalToFinishTwitterStream() {
@@ -69,4 +86,28 @@ func (v *twitterVote) doesStop() bool {
 	v.isStoppedLocker.Lock()
 	defer v.isStoppedLocker.Unlock()
 	return v.isStopped
+}
+
+func (v twitterVote) dialDB() {
+	if err := v.stream.db.dial(); err != nil {
+		log.Fatalf("could not dial to DB: %s\n", err)
+	}
+}
+
+func (v twitterVote) closeDB() {
+	v.stream.db.close()
+}
+
+func (v twitterVote) publishVotes() {
+	v.nsq.publishVotes(v.votesCh)
+}
+
+func (v twitterVote) startStream() {
+	v.stream.start(v.twitterStreamStopCh, v.votesCh)
+}
+
+func (v twitterVote) waitForStreamAndNSQToBeClosed() {
+	<-v.stream.stoppedCh
+	close(v.votesCh)
+	<-v.nsq.stoppedCh
 }
