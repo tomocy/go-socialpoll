@@ -2,8 +2,6 @@ package main
 
 import (
 	"log"
-
-	nsq "github.com/bitly/go-nsq"
 )
 
 func main() {
@@ -19,30 +17,11 @@ func main() {
 	defer twitterVoteDB.close()
 
 	votes := make(chan string)
-	publisherStopCh := publishVotes(votes)
+	twitterVoteNSQ := initTwitterVoteNSQ("localhost:4150")
+	go twitterVoteNSQ.publishVotes(votes)
 	twitterStreamStoppedCh := startTwitterStream(twitterStreamStopCh, votes, twitterVoteDB)
 
 	<-twitterStreamStoppedCh
 	close(votes)
-	<-publisherStopCh
-}
-
-func publishVotes(votes <-chan string) <-chan struct{} {
-	stop := make(chan struct{})
-	pub, _ := nsq.NewProducer("localhost:4150", nsq.NewConfig())
-	go func() {
-		defer func() {
-			stop <- struct{}{}
-		}()
-
-		for vote := range votes {
-			pub.Publish("votes", []byte(vote))
-		}
-
-		log.Println("stopping publishing")
-		pub.Stop()
-		log.Println("stopped publishing")
-	}()
-
-	return stop
+	<-twitterVoteNSQ.stoppedCh
 }
