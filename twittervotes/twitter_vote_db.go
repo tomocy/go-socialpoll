@@ -20,13 +20,13 @@ func initTwitterVoteDB(url string) twitterVoteDB {
 func (db *twitterVoteDB) dial() error {
 	var err error
 	db.session, err = mgo.Dial(db.url)
-	log.Printf("twitter vote db dialed db: %s\n", db.url)
+	log.Printf("twitterVoteDB dialed db: %s\n", db.url)
 	return err
 }
 
 func (db *twitterVoteDB) close() {
 	db.session.Close()
-	log.Printf("twitter vote db closed the connection to db: %s\n", db.url)
+	log.Printf("twitterVoteDB closed the connection to db: %s\n", db.url)
 }
 
 type poll struct {
