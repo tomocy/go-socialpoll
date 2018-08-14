@@ -32,8 +32,8 @@ func (v *twitterVote) waitInterruptSignalToFinishTwitterStream() {
 	<-v.termSignalCh
 	log.Println("twitter vote is stopping and finishing twitter stream")
 	v.stop()
-	v.sendStopSignalToTwitterStream()
 	v.stream.close()
+	v.notifyOfHavingStoppedStream()
 }
 
 func (v *twitterVote) stop() {
@@ -42,7 +42,7 @@ func (v *twitterVote) stop() {
 	v.isStopLocker.Unlock()
 }
 
-func (v *twitterVote) sendStopSignalToTwitterStream() {
+func (v *twitterVote) notifyOfHavingStoppedStream() {
 	v.twitterStreamStopCh <- struct{}{}
 }
 
