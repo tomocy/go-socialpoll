@@ -13,7 +13,7 @@ type twitterVote struct {
 	termSignalCh        chan os.Signal
 	twitterStreamStopCh chan struct{}
 	isStopLocker        sync.Mutex
-	isStop              bool
+	isStopped           bool
 }
 
 func newTwitterVote(twitterStreamStopCh chan struct{}) *twitterVote {
@@ -36,7 +36,7 @@ func (v *twitterVote) waitInterruptSignalToFinishTwitterStream() {
 
 func (v *twitterVote) stop() {
 	v.isStopLocker.Lock()
-	v.isStop = true
+	v.isStopped = true
 	v.isStopLocker.Unlock()
 }
 
@@ -45,6 +45,7 @@ func (v *twitterVote) sendStopSignalToTwitterStream() {
 }
 
 func (v *twitterVote) closeConnectionToTwitterStreamPerSecond() {
+	log.Println("twitter vote closes connection to twitter stream per second")
 	ticker := time.NewTicker(1 * time.Second)
 	defer ticker.Stop()
 	for {
@@ -62,5 +63,5 @@ func (v *twitterVote) closeConnectionToTwitterStreamPerSecond() {
 func (v *twitterVote) doesStop() bool {
 	v.isStopLocker.Lock()
 	defer v.isStopLocker.Unlock()
-	return v.isStop
+	return v.isStopped
 }
