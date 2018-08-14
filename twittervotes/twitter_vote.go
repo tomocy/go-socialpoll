@@ -33,7 +33,7 @@ func (v *twitterVote) waitInterruptSignalToFinishTwitterStream() {
 	log.Println("twitter vote is stopping and finishing twitter stream")
 	v.stop()
 	v.stream.close()
-	v.notifyOfHavingStoppedStream()
+	v.notifyOfHavingClosedStream()
 }
 
 func (v *twitterVote) stop() {
@@ -42,7 +42,7 @@ func (v *twitterVote) stop() {
 	v.isStopLocker.Unlock()
 }
 
-func (v *twitterVote) notifyOfHavingStoppedStream() {
+func (v *twitterVote) notifyOfHavingClosedStream() {
 	v.twitterStreamStopCh <- struct{}{}
 }
 
