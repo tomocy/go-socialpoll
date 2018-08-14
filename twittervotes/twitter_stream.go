@@ -22,11 +22,11 @@ type twitterStream struct {
 	client     *http.Client
 	conn       net.Conn
 	readCloser io.ReadCloser
-	db         twitterVoteDB
+	db         *twitterVoteDB
 	stoppedCh  chan struct{}
 }
 
-func newTwitterStream(db twitterVoteDB) *twitterStream {
+func newTwitterStream(db *twitterVoteDB) *twitterStream {
 	return &twitterStream{
 		db:        db,
 		stoppedCh: make(chan struct{}),

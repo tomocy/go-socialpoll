@@ -11,9 +11,9 @@ type twitterVoteNSQ struct {
 	stoppedCh chan struct{}
 }
 
-func initTwitterVoteNSQ(addr string) twitterVoteNSQ {
+func newTwitterVoteNSQ(addr string) *twitterVoteNSQ {
 	producer, _ := nsq.NewProducer(addr, nsq.NewConfig())
-	return twitterVoteNSQ{
+	return &twitterVoteNSQ{
 		producer:  producer,
 		stoppedCh: make(chan struct{}),
 	}

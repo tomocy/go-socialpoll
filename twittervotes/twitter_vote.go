@@ -13,17 +13,20 @@ type twitterVote struct {
 	termSignalCh        chan os.Signal
 	stream              *twitterStream
 	twitterStreamStopCh chan struct{}
+	nsq                 *twitterVoteNSQ
 	isStoppedLocker     sync.Mutex
 	isStopped           bool
 }
 
-func newTwitterVote(db twitterVoteDB, twitterStreamStopCh chan struct{}) *twitterVote {
+func newTwitterVote(twitterStreamStopCh chan struct{}, dbURL string, nsqURL string) *twitterVote {
 	termSignalCh := make(chan os.Signal)
 	signal.Notify(termSignalCh, syscall.SIGINT)
+	db := newTwitterVoteDB(dbURL)
 	return &twitterVote{
 		termSignalCh:        termSignalCh,
 		stream:              newTwitterStream(db),
 		twitterStreamStopCh: twitterStreamStopCh,
+		nsq:                 newTwitterVoteNSQ(nsqURL),
 	}
 }
 

@@ -11,8 +11,8 @@ type twitterVoteDB struct {
 	session *mgo.Session
 }
 
-func initTwitterVoteDB(url string) twitterVoteDB {
-	return twitterVoteDB{
+func newTwitterVoteDB(url string) *twitterVoteDB {
+	return &twitterVoteDB{
 		url: url,
 	}
 }
