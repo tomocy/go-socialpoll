@@ -24,7 +24,11 @@ func (nsq twitterVoteNSQ) publishVotes(votesCh <-chan string) {
 		nsq.producer.Publish("vote", []byte(vote))
 	}
 
-	log.Println("twitterVoteNSQ stopped publishing votes")
 	nsq.producer.Stop()
+	log.Println("twitterVoteNSQ stopped publishing votes")
+	nsq.notifyOfHavingStopped()
+}
+
+func (nsq twitterVoteNSQ) notifyOfHavingStopped() {
 	nsq.stoppedCh <- struct{}{}
 }
