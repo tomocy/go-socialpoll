@@ -24,7 +24,7 @@ func (db *twitterVoteDB) dial() error {
 	return err
 }
 
-func (db twitterVoteDB) close() {
+func (db *twitterVoteDB) close() {
 	log.Printf("twitter vote db closed the connection to db: %s\n", db.url)
 	db.session.Close()
 }
