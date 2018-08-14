@@ -6,6 +6,7 @@ import (
 	"os/signal"
 	"sync"
 	"syscall"
+	"time"
 )
 
 type twitterVote struct {
@@ -41,4 +42,25 @@ func (v *twitterVote) stop() {
 
 func (v *twitterVote) sendStopSignalToTwitterStream() {
 	v.twitterStreamStopCh <- struct{}{}
+}
+
+func (v *twitterVote) closeConnectionToTwitterStreamPerSecond() {
+	ticker := time.NewTicker(1 * time.Second)
+	defer ticker.Stop()
+	for {
+		select {
+		case <-ticker.C:
+			closeConn()
+		}
+
+		if v.doesStop() {
+			break
+		}
+	}
+}
+
+func (v *twitterVote) doesStop() bool {
+	v.isStopLocker.Lock()
+	defer v.isStopLocker.Unlock()
+	return v.isStop
 }
