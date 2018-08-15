@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"os"
 	"os/signal"
@@ -43,14 +44,15 @@ func (v *twitterVote) start() {
 }
 
 func (v *twitterVote) waitInterruptSignalToCloseStream() {
-	log.Println("twitterVote is waiting interrupt signal to finish twitter stream")
+	log.Println("twitterVote waits interrupt signal to close stream")
 	<-v.termSignalCh
-	log.Println("twitterVote is stopping and finishing twitter stream")
+	fmt.Println()
+	log.Println("twitterVote is closing stream")
 	v.stream.close()
 }
 
 func (v *twitterVote) closeConnectionToTwitterStreamPerSecond() {
-	log.Println("twitterVote closes connection to twitter stream per second")
+	log.Println("twitterVote closes connection to twitter per second")
 	ticker := time.NewTicker(1 * time.Second)
 	defer ticker.Stop()
 	for {
@@ -63,7 +65,7 @@ func (v *twitterVote) closeConnectionToTwitterStreamPerSecond() {
 
 func (v twitterVote) dialDB() {
 	if err := v.db.dial(); err != nil {
-		log.Fatalf("could not dial to DB: %s\n", err)
+		log.Fatalf("twitterVote could not dial to DB: %s\n", err)
 	}
 }
 
@@ -78,7 +80,7 @@ func (v twitterVote) publishVotes() {
 func (v twitterVote) openStream() {
 	options, err := v.db.loadOptions()
 	if err != nil {
-		log.Fatalf("could not load options from db: %s\n", err)
+		log.Fatalf("twitterVote could not load options from db: %s\n", err)
 	}
 	v.stream.start(v.votesCh, options)
 }

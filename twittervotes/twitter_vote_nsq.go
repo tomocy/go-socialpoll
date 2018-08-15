@@ -25,7 +25,7 @@ func (nsq twitterVoteNSQ) publishVotes(votesCh <-chan string) {
 	}
 
 	nsq.producer.Stop()
-	log.Println("twitterVoteNSQ stopped publishing votes")
+	log.Println("twitterVoteNSQ closed")
 	nsq.notifyOfHavingClosed()
 }
 

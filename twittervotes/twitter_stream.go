@@ -37,11 +37,11 @@ func (s *twitterStream) start(votesCh chan<- string, options []string) {
 	for {
 		select {
 		case <-s.closeCh:
-			log.Println("twitterStream stopped streaming")
 			s.closedCh <- struct{}{}
+			log.Println("twitterStream closed")
 			return
 		default:
-			log.Println("twitterStream started connecting to Twitter")
+			log.Println("twitterStream started connecting to twitter")
 			s.read(votesCh, options)
 			log.Println("twitterStream is waiting for 10s for next request")
 			time.Sleep(10 * time.Second)
@@ -105,7 +105,7 @@ func (s *twitterStream) setUpTwitterAuth() {
 		ClientSecret string `env:"SP_TWITTER_CLIENT_SECRET,required"`
 	}{}
 	if err := envdecode.Decode(&authCreds); err != nil {
-		log.Fatalf("could not decode twitter credentials from env: %s\n", err)
+		log.Fatalf("twitterStream could not decode twitter credentials from env: %s\n", err)
 	}
 
 	s.authCreds = &oauth.Credentials{
@@ -152,7 +152,7 @@ func (s twitterStream) deliverOptions(votesCh chan<- string, options []string) {
 	for {
 		var tweet tweet
 		if err := decoder.Decode(&tweet); err != nil {
-			log.Println("twitterStream finished decodeing")
+			log.Println("twitterStream finished decoding")
 			break
 		}
 
