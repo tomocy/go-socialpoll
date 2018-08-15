@@ -2,12 +2,12 @@ package main
 
 import nsqlib "github.com/bitly/go-nsq"
 
-type messageQueue interface {
+type queue interface {
 	stop()
 	connectToLookupd(string) error
 }
 
-func newMessageQueue(incrementCh chan<- string) (messageQueue, error) {
+func newQueue(incrementCh chan<- string) (queue, error) {
 	return newNSQ(incrementCh)
 }
 
