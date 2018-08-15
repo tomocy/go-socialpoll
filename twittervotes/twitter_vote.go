@@ -10,29 +10,29 @@ import (
 )
 
 type twitterVote struct {
-	stream         stream
-	nsq            nsq
-	db             *twitterVoteDB
-	termSignalCh   chan os.Signal
-	voteCh         chan string
-	streamClosedCh chan struct{}
-	nsqClosedCh    chan struct{}
+	stream            stream
+	nsq               nsq
+	db                *twitterVoteDB
+	interruptSignalCh chan os.Signal
+	voteCh            chan string
+	streamClosedCh    chan struct{}
+	nsqClosedCh       chan struct{}
 }
 
 func newTwitterVote(dbURL string, nsqURL string) *twitterVote {
-	termSignalCh := make(chan os.Signal)
-	signal.Notify(termSignalCh, syscall.SIGINT)
+	interruptSignalCh := make(chan os.Signal)
+	signal.Notify(interruptSignalCh, syscall.SIGINT)
 
 	streamClosedCh := make(chan struct{})
 	nsqClosedCh := make(chan struct{})
 	return &twitterVote{
-		stream:         newTwitterStream(streamClosedCh),
-		nsq:            newTwitterVoteNSQ(nsqURL, nsqClosedCh),
-		db:             newTwitterVoteDB(dbURL),
-		termSignalCh:   termSignalCh,
-		voteCh:         make(chan string),
-		streamClosedCh: streamClosedCh,
-		nsqClosedCh:    nsqClosedCh,
+		stream:            newTwitterStream(streamClosedCh),
+		nsq:               newTwitterVoteNSQ(nsqURL, nsqClosedCh),
+		db:                newTwitterVoteDB(dbURL),
+		interruptSignalCh: interruptSignalCh,
+		voteCh:            make(chan string),
+		streamClosedCh:    streamClosedCh,
+		nsqClosedCh:       nsqClosedCh,
 	}
 }
 
@@ -52,7 +52,7 @@ func (v *twitterVote) start() {
 
 func (v *twitterVote) waitInterruptSignalToCloseStream() {
 	log.Println("twitterVote waits interrupt signal to close stream")
-	<-v.termSignalCh
+	<-v.interruptSignalCh
 	fmt.Println()
 	log.Println("twitterVote is closing stream")
 	v.stream.close()
