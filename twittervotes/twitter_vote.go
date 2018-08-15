@@ -27,7 +27,7 @@ func newTwitterVote(dbURL string, nsqURL string) *twitterVote {
 	nsqClosedCh := make(chan struct{})
 	return &twitterVote{
 		stream:            newStream(dbURL, voteCh, streamClosedCh),
-		nsq:               newTwitterVoteNSQ(nsqURL, voteCh, nsqClosedCh),
+		nsq:               newNSQ(nsqURL, voteCh, nsqClosedCh),
 		interruptSignalCh: interruptSignalCh,
 		voteCh:            voteCh,
 		streamClosedCh:    streamClosedCh,

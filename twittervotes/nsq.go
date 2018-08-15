@@ -10,6 +10,10 @@ type nsq interface {
 	publishVotes()
 }
 
+func newNSQ(addr string, voteCh <-chan string, closedCh chan<- struct{}) nsq {
+	return newTwitterVoteNSQ(addr, voteCh, closedCh)
+}
+
 type twitterVoteNSQ struct {
 	producer *nsqlib.Producer
 	voteCh   <-chan string
