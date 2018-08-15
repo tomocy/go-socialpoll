@@ -40,7 +40,7 @@ func (v *twitterVote) start() {
 	go v.waitInterruptSignalToCloseStream()
 	go v.closeConnectionToTwitterStreamPerSecond()
 
-	go v.stream.start()
+	go v.stream.open()
 
 	go v.nsq.publishVotes()
 

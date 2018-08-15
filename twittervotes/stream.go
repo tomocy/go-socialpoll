@@ -17,7 +17,7 @@ import (
 )
 
 type stream interface {
-	start()
+	open()
 	close()
 	closeConnection()
 }
@@ -43,7 +43,7 @@ func newTwitterStream(dbURL string, voteCh chan<- string, closedCh chan<- struct
 	}
 }
 
-func (s *twitterStream) start() {
+func (s *twitterStream) open() {
 	if err := s.db.dial(); err != nil {
 		log.Fatalf("twitterStream could not dial DB: %s\n", err)
 	}
