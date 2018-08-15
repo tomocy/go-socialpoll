@@ -39,7 +39,7 @@ func (v *twitterVote) start() {
 	go v.publishVotes()
 	go v.openStream()
 
-	v.waitForStreamAndNSQToBeClosed()
+	v.waitForStreamAndNSQToClose()
 }
 
 func (v *twitterVote) waitInterruptSignalToCloseStream() {
@@ -83,7 +83,7 @@ func (v twitterVote) openStream() {
 	v.stream.start(v.votesCh, options)
 }
 
-func (v twitterVote) waitForStreamAndNSQToBeClosed() {
+func (v twitterVote) waitForStreamAndNSQToClose() {
 	<-v.stream.closedCh
 	close(v.votesCh)
 	<-v.nsq.closedCh
