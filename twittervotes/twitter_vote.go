@@ -41,10 +41,13 @@ func (v *twitterVote) start() {
 	go v.waitInterruptSignalToCloseStream()
 	go v.closeConnectionToTwitterStreamPerSecond()
 
-	v.dialDB()
-	defer v.closeDB()
+	if err := v.db.dial(); err != nil {
+		log.Fatalf("twitterVote could not dial DB: %s\n", err)
+	}
+	defer v.db.close()
 
-	go v.publishVotes()
+	go v.nsq.publishVotes(v.voteCh)
+
 	go v.openStream()
 
 	v.waitForStreamAndNSQToClose()
@@ -68,20 +71,6 @@ func (v *twitterVote) closeConnectionToTwitterStreamPerSecond() {
 			v.stream.closeConnection()
 		}
 	}
-}
-
-func (v twitterVote) dialDB() {
-	if err := v.db.dial(); err != nil {
-		log.Fatalf("twitterVote could not dial to DB: %s\n", err)
-	}
-}
-
-func (v twitterVote) closeDB() {
-	v.db.close()
-}
-
-func (v twitterVote) publishVotes() {
-	v.nsq.publishVotes(v.voteCh)
 }
 
 func (v twitterVote) openStream() {
