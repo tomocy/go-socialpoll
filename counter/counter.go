@@ -7,7 +7,7 @@ import (
 
 type counter struct {
 	db          db
-	nsq         *nsq
+	queue       queue
 	increments  map[string]int
 	incrementCh chan string
 }
@@ -19,7 +19,7 @@ func newCounter(dbURL string) (*counter, error) {
 		incrementCh: make(chan string),
 	}
 	var err error
-	counter.nsq, err = newNSQ(counter.incrementCh)
+	counter.queue, err = newQueue(counter.incrementCh)
 	if err != nil {
 		return nil, err
 	}
@@ -33,10 +33,10 @@ func (c *counter) start() error {
 	}
 	defer c.db.close()
 
-	if err := c.nsq.connectToLookupd("localhost:4161"); err != nil {
+	if err := c.queue.connectToLookupd("localhost:4161"); err != nil {
 		return err
 	}
-	defer c.nsq.stop()
+	defer c.queue.stop()
 
 	c.countAndUpdateDB()
 	return nil
