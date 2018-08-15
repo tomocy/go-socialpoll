@@ -12,6 +12,10 @@ type db interface {
 	loadOptions() ([]string, error)
 }
 
+func newDB(url string) db {
+	return newTwitterVoteDB(url)
+}
+
 type twitterVoteDB struct {
 	url     string
 	session *mgo.Session
