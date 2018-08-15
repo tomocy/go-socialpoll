@@ -4,19 +4,16 @@ import (
 	"log"
 	"os"
 	"os/signal"
-	"sync"
 	"syscall"
 	"time"
 )
 
 type twitterVote struct {
-	stream          *twitterStream
-	nsq             *twitterVoteNSQ
-	db              *twitterVoteDB
-	termSignalCh    chan os.Signal
-	votesCh         chan string
-	isStoppedLocker sync.Mutex
-	isStopped       bool
+	stream       *twitterStream
+	nsq          *twitterVoteNSQ
+	db           *twitterVoteDB
+	termSignalCh chan os.Signal
+	votesCh      chan string
 }
 
 func newTwitterVote(dbURL string, nsqURL string) *twitterVote {
@@ -49,15 +46,8 @@ func (v *twitterVote) waitInterruptSignalToFinishTwitterStream() {
 	log.Println("twitterVote is waiting interrupt signal to finish twitter stream")
 	<-v.termSignalCh
 	log.Println("twitterVote is stopping and finishing twitter stream")
-	v.stop()
 	v.stream.closeConnection()
 	v.stream.close()
-}
-
-func (v *twitterVote) stop() {
-	v.isStoppedLocker.Lock()
-	v.isStopped = true
-	v.isStoppedLocker.Unlock()
 }
 
 func (v *twitterVote) closeConnectionToTwitterStreamPerSecond() {
@@ -69,17 +59,7 @@ func (v *twitterVote) closeConnectionToTwitterStreamPerSecond() {
 		case <-ticker.C:
 			v.stream.closeConnection()
 		}
-
-		if v.doesStop() {
-			break
-		}
 	}
-}
-
-func (v *twitterVote) doesStop() bool {
-	v.isStoppedLocker.Lock()
-	defer v.isStoppedLocker.Unlock()
-	return v.isStopped
 }
 
 func (v twitterVote) dialDB() {
