@@ -2,6 +2,15 @@ package main
 
 import nsqlib "github.com/bitly/go-nsq"
 
+type messageQueue interface {
+	stop()
+	connectToLookupd(string) error
+}
+
+func newMessageQueue(incrementCh chan<- string) (messageQueue, error) {
+	return newNSQ(incrementCh)
+}
+
 type nsq struct {
 	consumer    *nsqlib.Consumer
 	incrementCh chan<- string
