@@ -46,7 +46,6 @@ func (v *twitterVote) waitInterruptSignalToCloseStream() {
 	log.Println("twitterVote is waiting interrupt signal to finish twitter stream")
 	<-v.termSignalCh
 	log.Println("twitterVote is stopping and finishing twitter stream")
-	v.stream.closeConnection()
 	v.stream.close()
 }
 
