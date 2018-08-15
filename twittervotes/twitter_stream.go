@@ -23,17 +23,17 @@ type twitterStream struct {
 	conn       net.Conn
 	readCloser io.ReadCloser
 	closeCh    chan struct{}
-	closedCh   chan struct{}
+	closedCh   chan<- struct{}
 }
 
-func newTwitterStream() *twitterStream {
+func newTwitterStream(closedCh chan<- struct{}) *twitterStream {
 	return &twitterStream{
 		closeCh:  make(chan struct{}),
-		closedCh: make(chan struct{}),
+		closedCh: closedCh,
 	}
 }
 
-func (s *twitterStream) start(votesCh chan<- string, options []string) {
+func (s *twitterStream) start(voteCh chan<- string, options []string) {
 	for {
 		select {
 		case <-s.closeCh:
@@ -42,14 +42,14 @@ func (s *twitterStream) start(votesCh chan<- string, options []string) {
 			return
 		default:
 			log.Println("twitterStream started connecting to twitter")
-			s.read(votesCh, options)
+			s.read(voteCh, options)
 			log.Println("twitterStream is waiting for 10s for next request")
 			time.Sleep(10 * time.Second)
 		}
 	}
 }
 
-func (s *twitterStream) read(votesCh chan<- string, options []string) {
+func (s *twitterStream) read(voteCh chan<- string, options []string) {
 	resp, err := s.makeRequestToDetectTweetsRegardingVote(options)
 	if err != nil {
 		log.Printf("twitterStream could not make request to detect tweets redarding options: %s\n", err)
@@ -57,7 +57,7 @@ func (s *twitterStream) read(votesCh chan<- string, options []string) {
 	}
 
 	s.readCloser = resp.Body
-	go s.deliverOptions(votesCh, options)
+	go s.deliverOptions(voteCh, options)
 }
 
 func (s *twitterStream) makeRequestToDetectTweetsRegardingVote(options []string) (*http.Response, error) {
@@ -147,7 +147,7 @@ type tweet struct {
 	Text string
 }
 
-func (s twitterStream) deliverOptions(votesCh chan<- string, options []string) {
+func (s twitterStream) deliverOptions(voteCh chan<- string, options []string) {
 	decoder := json.NewDecoder(s.readCloser)
 	for {
 		var tweet tweet
@@ -160,7 +160,7 @@ func (s twitterStream) deliverOptions(votesCh chan<- string, options []string) {
 			log.Println(option)
 			if strings.Contains(strings.ToLower(tweet.Text), strings.ToLower(option)) {
 				log.Println("vote: ", option)
-				votesCh <- option
+				voteCh <- option
 			}
 		}
 	}

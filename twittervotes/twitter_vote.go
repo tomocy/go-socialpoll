@@ -10,22 +10,29 @@ import (
 )
 
 type twitterVote struct {
-	stream       *twitterStream
-	nsq          *twitterVoteNSQ
-	db           *twitterVoteDB
-	termSignalCh chan os.Signal
-	votesCh      chan string
+	stream         *twitterStream
+	nsq            *twitterVoteNSQ
+	db             *twitterVoteDB
+	termSignalCh   chan os.Signal
+	voteCh         chan string
+	streamClosedCh chan struct{}
+	nsqClosedCh    chan struct{}
 }
 
 func newTwitterVote(dbURL string, nsqURL string) *twitterVote {
 	termSignalCh := make(chan os.Signal)
 	signal.Notify(termSignalCh, syscall.SIGINT)
+
+	streamClosedCh := make(chan struct{})
+	nsqClosedCh := make(chan struct{})
 	return &twitterVote{
-		stream:       newTwitterStream(),
-		nsq:          newTwitterVoteNSQ(nsqURL),
-		db:           newTwitterVoteDB(dbURL),
-		termSignalCh: termSignalCh,
-		votesCh:      make(chan string),
+		stream:         newTwitterStream(streamClosedCh),
+		nsq:            newTwitterVoteNSQ(nsqURL, nsqClosedCh),
+		db:             newTwitterVoteDB(dbURL),
+		termSignalCh:   termSignalCh,
+		voteCh:         make(chan string),
+		streamClosedCh: streamClosedCh,
+		nsqClosedCh:    nsqClosedCh,
 	}
 }
 
@@ -74,7 +81,7 @@ func (v twitterVote) closeDB() {
 }
 
 func (v twitterVote) publishVotes() {
-	v.nsq.publishVotes(v.votesCh)
+	v.nsq.publishVotes(v.voteCh)
 }
 
 func (v twitterVote) openStream() {
@@ -82,11 +89,11 @@ func (v twitterVote) openStream() {
 	if err != nil {
 		log.Fatalf("twitterVote could not load options from db: %s\n", err)
 	}
-	v.stream.start(v.votesCh, options)
+	v.stream.start(v.voteCh, options)
 }
 
 func (v twitterVote) waitForStreamAndNSQToClose() {
-	<-v.stream.closedCh
-	close(v.votesCh)
-	<-v.nsq.closedCh
+	<-v.streamClosedCh
+	close(v.voteCh)
+	<-v.nsqClosedCh
 }
