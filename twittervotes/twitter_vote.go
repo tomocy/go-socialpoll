@@ -23,14 +23,15 @@ func newTwitterVote(dbURL string, nsqURL string) *twitterVote {
 	interruptSignalCh := make(chan os.Signal)
 	signal.Notify(interruptSignalCh, syscall.SIGINT)
 
+	voteCh := make(chan string)
 	streamClosedCh := make(chan struct{})
 	nsqClosedCh := make(chan struct{})
 	return &twitterVote{
-		stream:            newTwitterStream(streamClosedCh),
+		stream:            newTwitterStream(voteCh, streamClosedCh),
 		nsq:               newTwitterVoteNSQ(nsqURL, nsqClosedCh),
 		db:                newTwitterVoteDB(dbURL),
 		interruptSignalCh: interruptSignalCh,
-		voteCh:            make(chan string),
+		voteCh:            voteCh,
 		streamClosedCh:    streamClosedCh,
 		nsqClosedCh:       nsqClosedCh,
 	}
@@ -78,7 +79,7 @@ func (v twitterVote) openStream() {
 	if err != nil {
 		log.Fatalf("twitterVote could not load options from db: %s\n", err)
 	}
-	v.stream.start(v.voteCh, options)
+	v.stream.start(options)
 }
 
 func (v twitterVote) waitForStreamAndNSQToClose() {

@@ -17,7 +17,7 @@ import (
 )
 
 type stream interface {
-	start(chan<- string, []string)
+	start([]string)
 	close()
 	closeConnection()
 }
@@ -28,18 +28,20 @@ type twitterStream struct {
 	client     *http.Client
 	conn       net.Conn
 	readCloser io.ReadCloser
+	voteCh     chan<- string
 	closeCh    chan struct{}
 	closedCh   chan<- struct{}
 }
 
-func newTwitterStream(closedCh chan<- struct{}) *twitterStream {
+func newTwitterStream(voteCh chan<- string, closedCh chan<- struct{}) *twitterStream {
 	return &twitterStream{
+		voteCh:   voteCh,
 		closeCh:  make(chan struct{}),
 		closedCh: closedCh,
 	}
 }
 
-func (s *twitterStream) start(voteCh chan<- string, options []string) {
+func (s *twitterStream) start(options []string) {
 	for {
 		select {
 		case <-s.closeCh:
@@ -48,14 +50,14 @@ func (s *twitterStream) start(voteCh chan<- string, options []string) {
 			return
 		default:
 			log.Println("twitterStream started connecting to twitter")
-			s.read(voteCh, options)
+			s.read(options)
 			log.Println("twitterStream is waiting for 10s for next request")
 			time.Sleep(10 * time.Second)
 		}
 	}
 }
 
-func (s *twitterStream) read(voteCh chan<- string, options []string) {
+func (s *twitterStream) read(options []string) {
 	resp, err := s.makeRequestToDetectTweetsRegardingVote(options)
 	if err != nil {
 		log.Printf("twitterStream could not make request to detect tweets redarding options: %s\n", err)
@@ -63,7 +65,7 @@ func (s *twitterStream) read(voteCh chan<- string, options []string) {
 	}
 
 	s.readCloser = resp.Body
-	go s.deliverOptions(voteCh, options)
+	go s.deliverOptions(options)
 }
 
 func (s *twitterStream) makeRequestToDetectTweetsRegardingVote(options []string) (*http.Response, error) {
@@ -153,7 +155,7 @@ type tweet struct {
 	Text string
 }
 
-func (s twitterStream) deliverOptions(voteCh chan<- string, options []string) {
+func (s twitterStream) deliverOptions(options []string) {
 	decoder := json.NewDecoder(s.readCloser)
 	for {
 		var tweet tweet
@@ -166,7 +168,7 @@ func (s twitterStream) deliverOptions(voteCh chan<- string, options []string) {
 			log.Println(option)
 			if strings.Contains(strings.ToLower(tweet.Text), strings.ToLower(option)) {
 				log.Println("vote: ", option)
-				voteCh <- option
+				s.voteCh <- option
 			}
 		}
 	}
