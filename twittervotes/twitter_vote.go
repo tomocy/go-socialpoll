@@ -12,7 +12,6 @@ import (
 type twitterVote struct {
 	stream            stream
 	nsq               nsq
-	db                db
 	interruptSignalCh chan os.Signal
 	voteCh            chan string
 	streamClosedCh    chan struct{}
@@ -27,9 +26,8 @@ func newTwitterVote(dbURL string, nsqURL string) *twitterVote {
 	streamClosedCh := make(chan struct{})
 	nsqClosedCh := make(chan struct{})
 	return &twitterVote{
-		stream:            newTwitterStream(voteCh, streamClosedCh),
+		stream:            newTwitterStream(dbURL, voteCh, streamClosedCh),
 		nsq:               newTwitterVoteNSQ(nsqURL, voteCh, nsqClosedCh),
-		db:                newTwitterVoteDB(dbURL),
 		interruptSignalCh: interruptSignalCh,
 		voteCh:            voteCh,
 		streamClosedCh:    streamClosedCh,
@@ -42,14 +40,9 @@ func (v *twitterVote) start() {
 	go v.waitInterruptSignalToCloseStream()
 	go v.closeConnectionToTwitterStreamPerSecond()
 
-	if err := v.db.dial(); err != nil {
-		log.Fatalf("twitterVote could not dial DB: %s\n", err)
-	}
-	defer v.db.close()
+	go v.stream.start()
 
 	go v.nsq.publishVotes()
-
-	go v.openStream()
 
 	v.waitForStreamAndNSQToClose()
 }
@@ -72,14 +65,6 @@ func (v *twitterVote) closeConnectionToTwitterStreamPerSecond() {
 			v.stream.closeConnection()
 		}
 	}
-}
-
-func (v twitterVote) openStream() {
-	options, err := v.db.loadOptions()
-	if err != nil {
-		log.Fatalf("twitterVote could not load options from db: %s\n", err)
-	}
-	v.stream.start(options)
 }
 
 func (v twitterVote) waitForStreamAndNSQToClose() {

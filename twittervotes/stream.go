@@ -17,7 +17,7 @@ import (
 )
 
 type stream interface {
-	start([]string)
+	start()
 	close()
 	closeConnection()
 }
@@ -28,20 +28,27 @@ type twitterStream struct {
 	client     *http.Client
 	conn       net.Conn
 	readCloser io.ReadCloser
+	db         db
 	voteCh     chan<- string
 	closeCh    chan struct{}
 	closedCh   chan<- struct{}
 }
 
-func newTwitterStream(voteCh chan<- string, closedCh chan<- struct{}) *twitterStream {
+func newTwitterStream(dbURL string, voteCh chan<- string, closedCh chan<- struct{}) *twitterStream {
 	return &twitterStream{
+		db:       newTwitterVoteDB(dbURL),
 		voteCh:   voteCh,
 		closeCh:  make(chan struct{}),
 		closedCh: closedCh,
 	}
 }
 
-func (s *twitterStream) start(options []string) {
+func (s *twitterStream) start() {
+	if err := s.db.dial(); err != nil {
+		log.Fatalf("twitterStream could not dial DB: %s\n", err)
+	}
+	defer s.db.close()
+
 	for {
 		select {
 		case <-s.closeCh:
@@ -50,14 +57,19 @@ func (s *twitterStream) start(options []string) {
 			return
 		default:
 			log.Println("twitterStream started connecting to twitter")
-			s.read(options)
+			s.read()
 			log.Println("twitterStream is waiting for 10s for next request")
 			time.Sleep(10 * time.Second)
 		}
 	}
 }
 
-func (s *twitterStream) read(options []string) {
+func (s *twitterStream) read() {
+	options, err := s.db.loadOptions()
+	if err != nil {
+		log.Printf("twitterStream could not load options from DB: %s\n", err)
+		return
+	}
 	resp, err := s.makeRequestToDetectTweetsRegardingVote(options)
 	if err != nil {
 		log.Printf("twitterStream could not make request to detect tweets redarding options: %s\n", err)
