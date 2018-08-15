@@ -12,7 +12,7 @@ import (
 type twitterVote struct {
 	stream            stream
 	nsq               nsq
-	db                *twitterVoteDB
+	db                db
 	interruptSignalCh chan os.Signal
 	voteCh            chan string
 	streamClosedCh    chan struct{}

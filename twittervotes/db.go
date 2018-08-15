@@ -6,6 +6,12 @@ import (
 	mgo "gopkg.in/mgo.v2"
 )
 
+type db interface {
+	dial() error
+	close()
+	loadOptions() ([]string, error)
+}
+
 type twitterVoteDB struct {
 	url     string
 	session *mgo.Session
