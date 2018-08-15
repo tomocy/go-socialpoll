@@ -16,6 +16,12 @@ import (
 	"github.com/joeshaw/envdecode"
 )
 
+type stream interface {
+	start(chan<- string, []string)
+	close()
+	closeConnection()
+}
+
 type twitterStream struct {
 	setUpOnce  sync.Once
 	authCreds  *oauth.Credentials
