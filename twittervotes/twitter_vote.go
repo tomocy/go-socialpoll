@@ -28,7 +28,7 @@ func newTwitterVote(dbURL string, nsqURL string) *twitterVote {
 	nsqClosedCh := make(chan struct{})
 	return &twitterVote{
 		stream:            newTwitterStream(voteCh, streamClosedCh),
-		nsq:               newTwitterVoteNSQ(nsqURL, nsqClosedCh),
+		nsq:               newTwitterVoteNSQ(nsqURL, voteCh, nsqClosedCh),
 		db:                newTwitterVoteDB(dbURL),
 		interruptSignalCh: interruptSignalCh,
 		voteCh:            voteCh,
@@ -47,7 +47,7 @@ func (v *twitterVote) start() {
 	}
 	defer v.db.close()
 
-	go v.nsq.publishVotes(v.voteCh)
+	go v.nsq.publishVotes()
 
 	go v.openStream()
 

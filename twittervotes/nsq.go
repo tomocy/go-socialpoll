@@ -7,24 +7,26 @@ import (
 )
 
 type nsq interface {
-	publishVotes(<-chan string)
+	publishVotes()
 }
 
 type twitterVoteNSQ struct {
 	producer *nsqlib.Producer
+	voteCh   <-chan string
 	closedCh chan<- struct{}
 }
 
-func newTwitterVoteNSQ(addr string, closedCh chan<- struct{}) *twitterVoteNSQ {
+func newTwitterVoteNSQ(addr string, voteCh <-chan string, closedCh chan<- struct{}) *twitterVoteNSQ {
 	producer, _ := nsqlib.NewProducer(addr, nsqlib.NewConfig())
 	return &twitterVoteNSQ{
 		producer: producer,
+		voteCh:   voteCh,
 		closedCh: closedCh,
 	}
 }
 
-func (nsq twitterVoteNSQ) publishVotes(voteCh <-chan string) {
-	for vote := range voteCh {
+func (nsq twitterVoteNSQ) publishVotes() {
+	for vote := range nsq.voteCh {
 		nsq.producer.Publish("vote", []byte(vote))
 	}
 
