@@ -6,7 +6,7 @@ import (
 )
 
 type counter struct {
-	db          *mongoDB
+	db          db
 	nsq         *nsq
 	increments  map[string]int
 	incrementCh chan string
@@ -14,7 +14,7 @@ type counter struct {
 
 func newCounter(dbURL string) (*counter, error) {
 	counter := &counter{
-		db:          newMongoDB(dbURL),
+		db:          newDB(dbURL),
 		increments:  make(map[string]int),
 		incrementCh: make(chan string),
 	}
