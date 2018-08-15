@@ -23,13 +23,13 @@ type twitterStream struct {
 	conn       net.Conn
 	readCloser io.ReadCloser
 	stopCh     chan struct{}
-	stoppedCh  chan struct{}
+	closedCh   chan struct{}
 }
 
 func newTwitterStream() *twitterStream {
 	return &twitterStream{
-		stopCh:    make(chan struct{}),
-		stoppedCh: make(chan struct{}),
+		stopCh:   make(chan struct{}),
+		closedCh: make(chan struct{}),
 	}
 }
 
@@ -38,7 +38,7 @@ func (s *twitterStream) start(votesCh chan<- string, options []string) {
 		select {
 		case <-s.stopCh:
 			log.Println("twitterStream stopped streaming")
-			s.stoppedCh <- struct{}{}
+			s.closedCh <- struct{}{}
 			return
 		default:
 			log.Println("twitterStream started connecting to Twitter")

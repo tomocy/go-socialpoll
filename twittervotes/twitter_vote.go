@@ -30,19 +30,19 @@ func newTwitterVote(dbURL string, nsqURL string) *twitterVote {
 
 func (v *twitterVote) start() {
 	log.Println("twitterVote started")
-	go v.waitInterruptSignalToFinishTwitterStream()
+	go v.waitInterruptSignalToCloseStream()
 	go v.closeConnectionToTwitterStreamPerSecond()
 
 	v.dialDB()
 	defer v.closeDB()
 
 	go v.publishVotes()
-	go v.startStream()
+	go v.openStream()
 
 	v.waitForStreamAndNSQToBeClosed()
 }
 
-func (v *twitterVote) waitInterruptSignalToFinishTwitterStream() {
+func (v *twitterVote) waitInterruptSignalToCloseStream() {
 	log.Println("twitterVote is waiting interrupt signal to finish twitter stream")
 	<-v.termSignalCh
 	log.Println("twitterVote is stopping and finishing twitter stream")
@@ -76,7 +76,7 @@ func (v twitterVote) publishVotes() {
 	v.nsq.publishVotes(v.votesCh)
 }
 
-func (v twitterVote) startStream() {
+func (v twitterVote) openStream() {
 	options, err := v.db.loadOptions()
 	if err != nil {
 		log.Fatalf("could not load options from db: %s\n", err)
@@ -85,7 +85,7 @@ func (v twitterVote) startStream() {
 }
 
 func (v twitterVote) waitForStreamAndNSQToBeClosed() {
-	<-v.stream.stoppedCh
+	<-v.stream.closedCh
 	close(v.votesCh)
-	<-v.nsq.stoppedCh
+	<-v.nsq.closedCh
 }

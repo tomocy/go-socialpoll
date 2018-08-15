@@ -7,15 +7,15 @@ import (
 )
 
 type twitterVoteNSQ struct {
-	producer  *nsq.Producer
-	stoppedCh chan struct{}
+	producer *nsq.Producer
+	closedCh chan struct{}
 }
 
 func newTwitterVoteNSQ(addr string) *twitterVoteNSQ {
 	producer, _ := nsq.NewProducer(addr, nsq.NewConfig())
 	return &twitterVoteNSQ{
-		producer:  producer,
-		stoppedCh: make(chan struct{}),
+		producer: producer,
+		closedCh: make(chan struct{}),
 	}
 }
 
@@ -26,9 +26,9 @@ func (nsq twitterVoteNSQ) publishVotes(votesCh <-chan string) {
 
 	nsq.producer.Stop()
 	log.Println("twitterVoteNSQ stopped publishing votes")
-	nsq.notifyOfHavingStopped()
+	nsq.notifyOfHavingBeenClosed()
 }
 
-func (nsq twitterVoteNSQ) notifyOfHavingStopped() {
-	nsq.stoppedCh <- struct{}{}
+func (nsq twitterVoteNSQ) notifyOfHavingBeenClosed() {
+	nsq.closedCh <- struct{}{}
 }
