@@ -22,18 +22,16 @@ type twitterStream struct {
 	client     *http.Client
 	conn       net.Conn
 	readCloser io.ReadCloser
-	db         *twitterVoteDB
 	stoppedCh  chan struct{}
 }
 
-func newTwitterStream(db *twitterVoteDB) *twitterStream {
+func newTwitterStream() *twitterStream {
 	return &twitterStream{
-		db:        db,
 		stoppedCh: make(chan struct{}),
 	}
 }
 
-func (s *twitterStream) start(stopCh <-chan struct{}, votesCh chan<- string) {
+func (s *twitterStream) start(stopCh <-chan struct{}, votesCh chan<- string, options []string) {
 	for {
 		select {
 		case <-stopCh:
@@ -42,19 +40,14 @@ func (s *twitterStream) start(stopCh <-chan struct{}, votesCh chan<- string) {
 			return
 		default:
 			log.Println("twitterStream started connecting to Twitter")
-			s.read(votesCh)
+			s.read(votesCh, options)
 			log.Println("twitterStream is waiting for 10s for next request")
 			time.Sleep(10 * time.Second)
 		}
 	}
 }
 
-func (s *twitterStream) read(votesCh chan<- string) {
-	options, err := s.db.loadOptions()
-	if err != nil {
-		log.Printf("twitterStream could not load options from db: %s\n", err)
-		return
-	}
+func (s *twitterStream) read(votesCh chan<- string, options []string) {
 	resp, err := s.makeRequestToDetectTweetsRegardingVote(options)
 	if err != nil {
 		log.Printf("twitterStream could not make request to detect tweets redarding options: %s\n", err)
