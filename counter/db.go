@@ -7,6 +7,16 @@ import (
 	"gopkg.in/mgo.v2/bson"
 )
 
+type db interface {
+	dial() error
+	close()
+	updateCounts(map[string]int)
+}
+
+func newDB(url string) db {
+	return newMongoDB(url)
+}
+
 type mongoDB struct {
 	url     string
 	session *mgo.Session
