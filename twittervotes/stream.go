@@ -34,6 +34,10 @@ type twitterStream struct {
 	closedCh   chan<- struct{}
 }
 
+func newStream(dbURL string, voteCh chan<- string, closedCh chan<- struct{}) stream {
+	return newTwitterStream(dbURL, voteCh, closedCh)
+}
+
 func newTwitterStream(dbURL string, voteCh chan<- string, closedCh chan<- struct{}) *twitterStream {
 	return &twitterStream{
 		db:       newTwitterVoteDB(dbURL),
