@@ -10,26 +10,24 @@ import (
 )
 
 type twitterVote struct {
-	stream              *twitterStream
-	nsq                 *twitterVoteNSQ
-	db                  *twitterVoteDB
-	termSignalCh        chan os.Signal
-	twitterStreamStopCh chan struct{}
-	votesCh             chan string
-	isStoppedLocker     sync.Mutex
-	isStopped           bool
+	stream          *twitterStream
+	nsq             *twitterVoteNSQ
+	db              *twitterVoteDB
+	termSignalCh    chan os.Signal
+	votesCh         chan string
+	isStoppedLocker sync.Mutex
+	isStopped       bool
 }
 
 func newTwitterVote(dbURL string, nsqURL string) *twitterVote {
 	termSignalCh := make(chan os.Signal)
 	signal.Notify(termSignalCh, syscall.SIGINT)
 	return &twitterVote{
-		stream:              newTwitterStream(),
-		nsq:                 newTwitterVoteNSQ(nsqURL),
-		db:                  newTwitterVoteDB(dbURL),
-		termSignalCh:        termSignalCh,
-		twitterStreamStopCh: make(chan struct{}),
-		votesCh:             make(chan string),
+		stream:       newTwitterStream(),
+		nsq:          newTwitterVoteNSQ(nsqURL),
+		db:           newTwitterVoteDB(dbURL),
+		termSignalCh: termSignalCh,
+		votesCh:      make(chan string),
 	}
 }
 
@@ -52,18 +50,14 @@ func (v *twitterVote) waitInterruptSignalToFinishTwitterStream() {
 	<-v.termSignalCh
 	log.Println("twitterVote is stopping and finishing twitter stream")
 	v.stop()
+	v.stream.closeConnection()
 	v.stream.close()
-	v.notifyOfHavingClosedStream()
 }
 
 func (v *twitterVote) stop() {
 	v.isStoppedLocker.Lock()
 	v.isStopped = true
 	v.isStoppedLocker.Unlock()
-}
-
-func (v *twitterVote) notifyOfHavingClosedStream() {
-	v.twitterStreamStopCh <- struct{}{}
 }
 
 func (v *twitterVote) closeConnectionToTwitterStreamPerSecond() {
@@ -73,7 +67,7 @@ func (v *twitterVote) closeConnectionToTwitterStreamPerSecond() {
 	for {
 		select {
 		case <-ticker.C:
-			v.stream.close()
+			v.stream.closeConnection()
 		}
 
 		if v.doesStop() {
@@ -107,7 +101,7 @@ func (v twitterVote) startStream() {
 	if err != nil {
 		log.Fatalf("could not load options from db: %s\n", err)
 	}
-	v.stream.start(v.twitterStreamStopCh, v.votesCh, options)
+	v.stream.start(v.votesCh, options)
 }
 
 func (v twitterVote) waitForStreamAndNSQToBeClosed() {

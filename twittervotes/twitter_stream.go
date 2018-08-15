@@ -22,19 +22,21 @@ type twitterStream struct {
 	client     *http.Client
 	conn       net.Conn
 	readCloser io.ReadCloser
+	stopCh     chan struct{}
 	stoppedCh  chan struct{}
 }
 
 func newTwitterStream() *twitterStream {
 	return &twitterStream{
+		stopCh:    make(chan struct{}),
 		stoppedCh: make(chan struct{}),
 	}
 }
 
-func (s *twitterStream) start(stopCh <-chan struct{}, votesCh chan<- string, options []string) {
+func (s *twitterStream) start(votesCh chan<- string, options []string) {
 	for {
 		select {
-		case <-stopCh:
+		case <-s.stopCh:
 			log.Println("twitterStream stopped streaming")
 			s.stoppedCh <- struct{}{}
 			return
@@ -126,7 +128,11 @@ func (s *twitterStream) dial(network, addr string) (net.Conn, error) {
 	return newConn, nil
 }
 
-func (s *twitterStream) close() {
+func (s twitterStream) close() {
+	s.stopCh <- struct{}{}
+}
+
+func (s *twitterStream) closeConnection() {
 	if s.conn != nil {
 		s.conn.Close()
 	}
