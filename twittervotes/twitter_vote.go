@@ -14,7 +14,6 @@ type twitterVote struct {
 	nsq                 *twitterVoteNSQ
 	db                  *twitterVoteDB
 	termSignalCh        chan os.Signal
-	stoppedCh           chan struct{}
 	twitterStreamStopCh chan struct{}
 	votesCh             chan string
 	isStoppedLocker     sync.Mutex
