@@ -24,7 +24,6 @@ type twitterVote struct {
 func newTwitterVote(dbURL string, nsqURL string) *twitterVote {
 	termSignalCh := make(chan os.Signal)
 	signal.Notify(termSignalCh, syscall.SIGINT)
-	// db := newTwitterVoteDB(dbURL)
 	return &twitterVote{
 		stream:              newTwitterStream(),
 		nsq:                 newTwitterVoteNSQ(nsqURL),
