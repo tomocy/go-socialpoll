@@ -11,7 +11,7 @@ import (
 
 type twitterVote struct {
 	stream         stream
-	nsq            *twitterVoteNSQ
+	nsq            nsq
 	db             *twitterVoteDB
 	termSignalCh   chan os.Signal
 	voteCh         chan string

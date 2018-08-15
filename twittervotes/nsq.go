@@ -3,16 +3,20 @@ package main
 import (
 	"log"
 
-	nsq "github.com/bitly/go-nsq"
+	nsqlib "github.com/bitly/go-nsq"
 )
 
+type nsq interface {
+	publishVotes(<-chan string)
+}
+
 type twitterVoteNSQ struct {
-	producer *nsq.Producer
+	producer *nsqlib.Producer
 	closedCh chan<- struct{}
 }
 
 func newTwitterVoteNSQ(addr string, closedCh chan<- struct{}) *twitterVoteNSQ {
-	producer, _ := nsq.NewProducer(addr, nsq.NewConfig())
+	producer, _ := nsqlib.NewProducer(addr, nsqlib.NewConfig())
 	return &twitterVoteNSQ{
 		producer: producer,
 		closedCh: closedCh,
