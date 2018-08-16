@@ -2,7 +2,6 @@ package main
 
 import (
 	"flag"
-	"fmt"
 	"log"
 	"net/http"
 	"time"
@@ -130,5 +129,19 @@ func handlePollsWithPost(w http.ResponseWriter, r *http.Request) {
 }
 
 func handlePollsWithDelete(w http.ResponseWriter, r *http.Request) {
-	respondErr(w, http.StatusInternalServerError, fmt.Errorf("not implemented"))
+	db := getVar(r, "db").(*mgo.Database)
+	polls := db.C("polls")
+
+	path := newPath(r.URL.Path)
+	if !path.hasID() {
+		respondErr(w, http.StatusMethodNotAllowed, "you cannot delete all polls")
+		return
+	}
+
+	if err := polls.RemoveId(bson.ObjectIdHex(path.id)); err != nil {
+		respondErr(w, http.StatusInternalServerError, err)
+		return
+	}
+
+	respond(w, http.StatusOK, nil)
 }
