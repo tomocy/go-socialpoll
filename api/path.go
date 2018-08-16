@@ -9,8 +9,8 @@ type path struct {
 
 const pathSeparator = "/"
 
-func newPath(path string) *path {
-	trimmedPath := strings.Trim(path, pathSeparator)
+func newPath(p string) *path {
+	trimmedPath := strings.Trim(p, pathSeparator)
 	pathPieces := strings.Split(trimmedPath, pathSeparator)
 	var id string
 	if 2 <= len(pathPieces) {
