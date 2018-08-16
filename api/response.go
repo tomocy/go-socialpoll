@@ -6,11 +6,8 @@ import (
 	"net/http"
 )
 
-func respond(w http.ResponseWriter, status int, data interface{}) {
-	w.WriteHeader(status)
-	if data != nil {
-		encodeBody(w, data)
-	}
+func respondHTTPErr(w http.ResponseWriter, status int) {
+	respondErr(w, status, http.StatusText(status))
 }
 
 func respondErr(w http.ResponseWriter, status int, data ...interface{}) {
@@ -19,6 +16,13 @@ func respondErr(w http.ResponseWriter, status int, data ...interface{}) {
 			"message": fmt.Sprint(data...),
 		},
 	})
+}
+
+func respond(w http.ResponseWriter, status int, data interface{}) {
+	w.WriteHeader(status)
+	if data != nil {
+		encodeBody(w, data)
+	}
 }
 
 func encodeBody(w http.ResponseWriter, data interface{}) error {
