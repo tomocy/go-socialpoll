@@ -2,6 +2,7 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"log"
 	"net/http"
 	"time"
@@ -72,5 +73,28 @@ func isValidAPIKey(key string) bool {
 }
 
 func handlePolls(w http.ResponseWriter, r *http.Request) {
+	switch r.Method {
+	case "GET":
+		handlePollsWithGet(w, r)
+		return
+	case "POST":
+		handlePollsWithPost(w, r)
+		return
+	case "DELETE":
+		handlePollsWithDelete(w, r)
+		return
+	}
+	respondHTTPErr(w, http.StatusNotFound)
+}
 
+func handlePollsWithGet(w http.ResponseWriter, r *http.Request) {
+	respondErr(w, http.StatusInternalServerError, fmt.Errorf("not implemented"))
+}
+
+func handlePollsWithPost(w http.ResponseWriter, r *http.Request) {
+	respondErr(w, http.StatusInternalServerError, fmt.Errorf("not implemented"))
+}
+
+func handlePollsWithDelete(w http.ResponseWriter, r *http.Request) {
+	respondErr(w, http.StatusInternalServerError, fmt.Errorf("not implemented"))
 }
