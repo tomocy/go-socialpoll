@@ -8,6 +8,7 @@ import (
 	"time"
 
 	mgo "gopkg.in/mgo.v2"
+	"gopkg.in/mgo.v2/bson"
 	graceful "gopkg.in/tylerb/graceful.v1"
 )
 
@@ -88,7 +89,24 @@ func handlePolls(w http.ResponseWriter, r *http.Request) {
 }
 
 func handlePollsWithGet(w http.ResponseWriter, r *http.Request) {
-	respondErr(w, http.StatusInternalServerError, fmt.Errorf("not implemented"))
+	db := getVar(r, "db").(*mgo.Database)
+	polls := db.C("polls")
+
+	var q *mgo.Query
+	path := newPath(r.URL.Path)
+	if path.hasID() {
+		q = polls.FindId(bson.ObjectIdHex(path.id))
+	} else {
+		q = polls.Find(nil)
+	}
+
+	var pollResults []*poll
+	if err := q.All(&pollResults); err != nil {
+		respondErr(w, http.StatusInternalServerError, err)
+		return
+	}
+
+	respond(w, http.StatusOK, &pollResults)
 }
 
 func handlePollsWithPost(w http.ResponseWriter, r *http.Request) {
