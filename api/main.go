@@ -42,3 +42,11 @@ func withVars(f http.HandlerFunc) http.HandlerFunc {
 		f(w, r)
 	}
 }
+
+func withCORS(f http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Access-Control-Allow-Origin", "*")
+		w.Header().Set("Access-Control-Expose-Header", "Location")
+		f(w, r)
+	}
+}
