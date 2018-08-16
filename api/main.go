@@ -87,6 +87,7 @@ func handlePolls(w http.ResponseWriter, r *http.Request) {
 		handlePollsWithOptions(w)
 		return
 	}
+
 	respondHTTPErr(w, http.StatusNotFound)
 }
 
