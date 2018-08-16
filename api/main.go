@@ -1,6 +1,10 @@
 package main
 
-import "net/http"
+import (
+	"net/http"
+
+	mgo "gopkg.in/mgo.v2"
+)
 
 func main() {
 
@@ -18,4 +22,14 @@ func withAPIKey(f http.HandlerFunc) http.HandlerFunc {
 
 func isValidAPIKey(key string) bool {
 	return key == "abc"
+}
+
+func withDB(dbSession *mgo.Session, f http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		ourDBSession := dbSession.Copy()
+		defer ourDBSession.Close()
+
+		setVar(r, "db", ourDBSession.DB("ballots"))
+		f(w, r)
+	}
 }
