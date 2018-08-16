@@ -110,7 +110,23 @@ func handlePollsWithGet(w http.ResponseWriter, r *http.Request) {
 }
 
 func handlePollsWithPost(w http.ResponseWriter, r *http.Request) {
-	respondErr(w, http.StatusInternalServerError, fmt.Errorf("not implemented"))
+	db := getVar(r, "db").(*mgo.Database)
+	polls := db.C("polls")
+
+	var poll poll
+	if err := decodeBody(r, &poll); err != nil {
+		respondErr(w, http.StatusBadRequest, err)
+		return
+	}
+
+	poll.ID = bson.NewObjectId()
+	if err := polls.Insert(poll); err != nil {
+		respondErr(w, http.StatusInternalServerError, err)
+		return
+	}
+
+	w.Header().Set("Location", "polls/"+poll.ID.Hex())
+	respond(w, http.StatusCreated, nil)
 }
 
 func handlePollsWithDelete(w http.ResponseWriter, r *http.Request) {
