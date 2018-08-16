@@ -33,3 +33,12 @@ func withDB(dbSession *mgo.Session, f http.HandlerFunc) http.HandlerFunc {
 		f(w, r)
 	}
 }
+
+func withVars(f http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		openVars(r)
+		defer closeVars(r)
+
+		f(w, r)
+	}
+}
