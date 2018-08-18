@@ -2,14 +2,22 @@ package main
 
 import "strings"
 
-type path struct {
-	path string
-	id   string
+type apiPath struct {
+	pathBeforeID string
+	id           string
 }
 
 const pathSeparator = "/"
 
-func newPath(p string) *path {
+func newAPIPath(path string) *apiPath {
+	pathBeforeID, id := separateIntoPathBeforeIDAndID(path)
+	return &apiPath{
+		pathBeforeID: pathBeforeID,
+		id:           id,
+	}
+}
+
+func separateIntoPathBeforeIDAndID(p string) (string, string) {
 	trimmedPath := strings.Trim(p, pathSeparator)
 	pathPieces := strings.Split(trimmedPath, pathSeparator)
 	var id string
@@ -17,13 +25,9 @@ func newPath(p string) *path {
 		id = pathPieces[len(pathPieces)-1]
 		trimmedPath = strings.Join(pathPieces[:len(pathPieces)-1], pathSeparator)
 	}
-
-	return &path{
-		path: trimmedPath,
-		id:   id,
-	}
+	return trimmedPath, id
 }
 
-func (p path) hasID() bool {
+func (p apiPath) hasID() bool {
 	return 1 <= len(p.id)
 }

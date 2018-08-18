@@ -96,7 +96,7 @@ func handlePollsWithGet(w http.ResponseWriter, r *http.Request) {
 	polls := db.C("polls")
 
 	var q *mgo.Query
-	path := newPath(r.URL.Path)
+	path := newAPIPath(r.URL.Path)
 	if path.hasID() {
 		q = polls.FindId(bson.ObjectIdHex(path.id))
 	} else {
@@ -136,7 +136,7 @@ func handlePollsWithDelete(w http.ResponseWriter, r *http.Request) {
 	db := getVar(r, "db").(*mgo.Database)
 	polls := db.C("polls")
 
-	path := newPath(r.URL.Path)
+	path := newAPIPath(r.URL.Path)
 	if !path.hasID() {
 		respondErr(w, http.StatusMethodNotAllowed, "you cannot delete all polls")
 		return
