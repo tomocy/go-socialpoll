@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>List</title>
+
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u"
+    crossorigin="anonymous">
+</head>
+<body>
+    
+    <div class="container">
+        <div class="col-md-4"></div>
+        <div class="col-md-4">
+
+            <div class="page-header">
+                <h1>The list of polls</h1>
+            </div>
+
+            <ul id="polls" class="list-group"></ul>
+
+            <a href="./new.html" class="btn btn-primary">Create new poll</a>
+        </div>
+    </div>
+
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+<script>
+    $(function() {
+        var pollUpdater = function() {
+            var $polls = $("#polls")
+            $.get("http://192.168.55.55:8080/polls/?key=abc", null, null, "json")
+            .done(function(polls) {
+                $polls.empty()
+                for (var poll of polls) {
+                    $polls.append(
+                        $("<li>").attr({
+                            "class": "list-group-item"
+                        }).append(
+                            $("<a>").attr({
+                                "href": "./view.html?poll=polls/" + poll.id
+                            }).text(poll.title)
+                        )
+                    )
+                }
+            })
+
+            setTimeout(pollUpdater, 10000)
+        }
+
+        pollUpdater()
+    })
+</script>
+</body>
+</html>
