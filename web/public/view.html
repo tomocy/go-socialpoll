@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Poll</title>
+
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u"
+        crossorigin="anonymous">
+</head>
+<body>
+
+    <div class="container">
+        <div class="col-md-4"></div>
+        <div class="col-md-4">
+            <div class="page-header">
+                <h1 id="title">...</h1>
+            </div>
+
+            <ul id="options" class="list-group"></ul>
+
+            <div id="chart"></div>
+
+            <div id="delete-btn" class="btn btn-sm">Delete this poll</div>
+        </div>
+    </div>
+
+<script type="text/javascript" src="http://www.google.com/jsapi"></script>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+<script>
+    google.load("visualization", "1", {"package": ["corechart"]})
+    google.setOnLoadCallback(function() {
+        $(function() {
+            var chart
+            var pollID = location.href.split("poll=")[1]
+            var pollUpdater = function() {
+                $.get("http://192.168.55.55:8080/polls/" + pollID + "/?key=abc", null, null, "json")
+                .done(function(polls) {
+                    var poll = polls[0]
+                    $("#title").text(poll.title)
+                    setOptions(poll.options)
+                    if (!chart) {
+                        chart = $("#chart")
+                    }
+                    setChart(chart, poll.results)
+                })
+
+                setTimeout(pollUpdater, 1000)
+            }
+            pollUpdater()
+
+            $("#delete-btn").click(function() {
+                if (!confirm("Do you really delete this poll?")) {
+                    return
+                }
+                $.ajax({
+                    url: "http://192.168.55.55:8080/polls/" + pollID + "/?key=abc",
+                    type: "DELETE"
+                }).done(function() {
+                    location.href = "/"
+                })
+            })
+        })
+    })
+
+    function setOptions(options) {
+        var $options = $("#options")
+        $options.empty()
+        for (var option of options) {
+            $options.append(
+                $("<li>").addClass("list-group-item").append(option)
+            )
+        }
+    }
+
+    function setChart(chartElm, results) {
+        if (!results) {
+            return
+        }
+        var table = new google.visualization.DataTable()
+        table.addColumn("string", "Options")
+        table.addColumn("number", "Votes")
+        for (var i of results) {
+            table.addRow([i, results[i]])
+        }
+        
+        var chart = new google.visualization.PiChart(chartElm)
+        chart.draw(table, {is3D: true})
+    }
+</script>
+</body>
+</html>

@@ -34,7 +34,7 @@ func main() {
 func withCORS(f http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Access-Control-Allow-Origin", "*")
-		w.Header().Set("Access-Control-Expose-Header", "Location")
+		w.Header().Set("Access-Control-Expose-Headers", "Location")
 		f(w, r)
 	}
 }

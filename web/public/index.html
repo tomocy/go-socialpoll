@@ -21,7 +21,7 @@
 
             <ul id="polls" class="list-group"></ul>
 
-            <a href="./new.html" class="btn btn-primary">Create new poll</a>
+            <a href="./create.html" class="btn btn-primary">Create new poll</a>
         </div>
     </div>
 
@@ -40,7 +40,7 @@
                             "class": "list-group-item"
                         }).append(
                             $("<a>").attr({
-                                "href": "./view.html?poll=polls/" + poll.id
+                                "href": "./view.html?poll=" + poll.id
                             }).text(poll.title)
                         )
                     )

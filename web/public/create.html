@@ -53,7 +53,8 @@
                 title: title,
                 options: options
             })).done(function(d, s, r) {
-                location.href = "view.html?poll=" + r.getResponseHeader("Location")
+                var pollID = r.getResponseHeader("Location").split("polls/")[1]
+                location.href = "view.html?poll=" + pollID
             })
         })
 
