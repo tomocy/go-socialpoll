@@ -43,7 +43,7 @@
                     if (!chart) {
                         chart = $("#chart")
                     }
-                    setChart(chart, poll.results)
+                    setChart(chart, poll.result)
                 })
 
                 setTimeout(pollUpdater, 1000)
@@ -74,15 +74,15 @@
         }
     }
 
-    function setChart(chartElm, results) {
-        if (!results) {
+    function setChart(chartElm, result) {
+        if (!result) {
             return
         }
         var table = new google.visualization.DataTable()
         table.addColumn("string", "Options")
         table.addColumn("number", "Votes")
-        for (var i of results) {
-            table.addRow([i, results[i]])
+        for (var i of result) {
+            table.addRow([i, result[i]])
         }
         
         var chart = new google.visualization.PiChart(chartElm)
