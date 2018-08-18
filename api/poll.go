@@ -6,5 +6,5 @@ type poll struct {
 	ID      bson.ObjectId  `bson:"_id" json:"id"`
 	Title   string         `json:"title"`
 	Options []string       `json:"options"`
-	Results map[string]int `json:"results,omitempty"`
+	Result  map[string]int `json:"result,omitempty"`
 }
