@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Create a poll</title>
+
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u"
+        crossorigin="anonymous">
+</head>
+<body>
+    
+    <div class="container">
+        <div class="col-md-4"></div>
+        <div class="col-md-4">
+
+            <div class="page-header">
+                <h1>Create a poll</h1>
+            </div>
+
+            <form id="create-poll-form">
+                <div class="form-group">
+                    <label for="poll-title">Title</label>
+                    <input type="text" placeholder="title" id="poll-title" class="form-control">
+                </div>
+
+                <div class="form-group">
+                    <label for="poll-options">Options</label>
+                    <input type="text" placeholder="optionA, optionB" id="poll-options" class="form-control">
+                    <p class="help-block">separate with ,</p>
+                </div>
+
+                <button type="submit" class="btn btn-primary">Create</button>
+                or
+                <a href="/">Cancel</a>
+            </form>
+
+        </div>
+    </div>
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+<script>
+    $(function() {
+        var $pollForm = $("#create-poll-form")
+        $pollForm.submit(function(e) {
+            e.preventDefault()
+            var title = $("#poll-title").val()
+            var options = $("#poll-options").val()
+            options = splitAndTrimOptions(options)
+
+            $.post("http://192.168.55.55:8080/polls/?key=abc", JSON.stringify({
+                title: title,
+                options: options
+            })).done(function(d, s, r) {
+                location.href = "view.html?poll=" + r.getResponseHeader("Location")
+            })
+        })
+
+        function splitAndTrimOptions(plainOptions) {
+            options = plainOptions.split(",")
+            for (var i in options) {
+                options[i] = options[i].trim()
+            }
+
+            return options
+        }
+    })
+</script>
+</body>
+</html>
