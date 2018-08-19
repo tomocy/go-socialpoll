@@ -17,18 +17,29 @@ func main() {
 	flag.Parse()
 
 	log.Printf("connect to db: %s\n", *dbURL)
-	dbSession, err := mgo.Dial(*dbURL)
+	dbSession, dbSessionClose := dialDB(*dbURL)
+	defer dbSessionClose()
+
+	startListeningAndServing(*addr, dbSession)
+}
+
+func dialDB(url string) (*mgo.Session, func()) {
+	session, err := mgo.Dial(url)
 	if err != nil {
 		log.Fatalf("faild to connect to db: %s\n", err)
 	}
-	defer dbSession.Close()
-	log.Println("successfully connected to db")
 
+	return session, session.Close
+}
+
+func startListeningAndServing(addr string, dbSession *mgo.Session) {
 	mux := http.NewServeMux()
+	setRouting(mux, dbSession)
+	graceful.Run(addr, 1*time.Second, mux)
+}
+
+func setRouting(mux *http.ServeMux, dbSession *mgo.Session) {
 	mux.HandleFunc("/polls/", withCORS(withVars(withDB(dbSession, withAPIKey(handlePolls)))))
-	log.Println("start serving")
-	graceful.Run(*addr, 1*time.Second, mux)
-	log.Println("stopped serving")
 }
 
 func withCORS(f http.HandlerFunc) http.HandlerFunc {
